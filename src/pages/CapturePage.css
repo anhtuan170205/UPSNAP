@@ -1,0 +1,14 @@
+.capture-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.camera-container {
+  position: relative;
+  width: min(90vw, 900px);
+}
+
+.capture-button {
+  margin-top: 20px;
+}

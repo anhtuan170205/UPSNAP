@@ -182,3 +182,28 @@
     border-right-color: var(--border);
   }
 }
+
+.camera-container {
+  position: relative;
+  display: inline-block;
+}
+
+.camera-container video {
+  display: block;
+  max-width: 100%;
+}
+
+.countdown {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 8rem;
+  font-weight: bold;
+  color: white;
+
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}

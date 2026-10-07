@@ -1,3 +1,5 @@
+import "./CapturedPhotoPreview.css";
+
 interface CapturedPhotoPreviewProps {
   photo: string;
   onRetake: () => void;
@@ -10,13 +12,10 @@ export function CapturedPhotoPreview({
   onAccept,
 }: CapturedPhotoPreviewProps) {
   return (
-    <div>
-      <img
-        src={photo}
-        alt="Captured"
-      />
+    <div className="captured-photo-preview">
+      <img src={photo} alt="Captured" />
 
-      <div>
+      <div className="captured-photo-actions">
         <button onClick={onRetake}>
           Retake
         </button>
