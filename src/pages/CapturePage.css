@@ -12,3 +12,18 @@
 .capture-button {
   margin-top: 20px;
 }
+
+.capture-ready {
+  width: min(92vw, 560px);
+  padding: 2rem;
+  border: 1px solid #d8d2e4;
+  border-radius: .75rem;
+  background: #fff;
+  text-align: center;
+}
+
+.capture-error { max-width: 40rem; color: #a61b1b; text-align: center; }
+.automatic-capture-status { margin-top: 1rem; font-weight: 700; }
+.back-to-review { margin-top: .75rem; }
+.confirmation-dialog { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 1rem; background: rgb(24 18 36 / 55%); }
+.confirmation-dialog__content { width: min(100%, 440px); padding: 1.5rem; border-radius: .75rem; background: #fff; }

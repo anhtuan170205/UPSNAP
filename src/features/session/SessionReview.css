@@ -1,0 +1,12 @@
+.session-review { width: min(92vw, 900px); margin: 0 auto; text-align: center; }
+.stage-label, .slot-label { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.stage-label { color: #6b46c1; }
+.review-intro { margin: .5rem auto 1.5rem; max-width: 38rem; }
+.photo-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.review-photo-card { display: flex; flex-direction: column; gap: .65rem; padding: .85rem; border: 1px solid #d8d2e4; border-radius: .75rem; background: #fff; text-align: left; }
+.review-photo-card img, .missing-photo { width: 100%; aspect-ratio: 4 / 3; border-radius: .5rem; background: #eeeaf5; object-fit: cover; }
+.missing-photo { display: grid; place-items: center; }
+.review-photo-card button { align-self: flex-start; }
+.review-actions { display: flex; justify-content: center; gap: .75rem; margin-top: 1.5rem; }
+.secondary-action { background: #fff; color: #3b285f; border: 1px solid currentColor; }
+@media (max-width: 560px) { .photo-review-grid { grid-template-columns: 1fr; } .review-actions { flex-direction: column-reverse; } .review-actions button { width: 100%; } }
