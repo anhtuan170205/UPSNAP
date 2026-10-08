@@ -12,7 +12,7 @@ export function SessionReview({ session, onRetakePhoto, onRetakeAll, onContinue 
   return (
     <section className="session-review" aria-labelledby="review-heading">
       <p className="stage-label">Session complete</p>
-      <h2 id="review-heading">Review your 4 photos</h2>
+      <h2 id="review-heading">Review your {session.requiredPhotoCount} photos</h2>
       <p className="review-intro">Retake any photo you would like to replace before editing your set.</p>
       <div className="photo-review-grid">
         {session.photos.map((photo, slotIndex) => (

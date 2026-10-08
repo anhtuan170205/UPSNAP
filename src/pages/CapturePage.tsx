@@ -7,7 +7,8 @@ import { CapturedPhotoPreview } from "../features/capture/CapturedPhotoPreview";
 import { capturePhoto } from "../features/capture/captureService";
 import { SessionReview } from "../features/session/SessionReview";
 import { useCamera } from "../hooks/useCamera";
-import { createPhotoSession, getNextEmptySlot, isSessionComplete, replaceSessionPhoto, type PhotoSession } from "../types/photoSession";
+import { createPhotoSession, getNextEmptySlot, isSessionComplete, placeLayoutPhoto, reorderLayoutPhotos, replaceSessionPhoto, selectSessionLayout, type PhotoSession } from "../types/photoSession";
+import type { LayoutId } from "../features/editor/layoutDefinitions";
 
 const COUNTDOWN_SECONDS = 3;
 type CaptureStage = "ready" | "capture" | "preview" | "review" | "editor";
@@ -108,7 +109,7 @@ export function CapturePage() {
       {isRestartDialogOpen && <div className="confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="restart-heading">
         <div className="confirmation-dialog__content">
           <h2 id="restart-heading">Retake all photos?</h2>
-          <p>This clears the four accepted photos and starts a new session.</p>
+          <p>This clears the {session.requiredPhotoCount} accepted photos and starts a new session.</p>
           <div className="captured-photo-actions">
             <button type="button" onClick={() => setIsRestartDialogOpen(false)}>Keep photos</button>
             <button type="button" onClick={handleRestartAll}>Retake all photos</button>
@@ -119,14 +120,14 @@ export function CapturePage() {
   }
 
   if (stage === "editor") {
-    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} /></main>;
+    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} /></main>;
   }
 
   if (stage === "ready") {
     return <main className="capture-page">
       <h1>UPSNAP</h1>
       <section className="capture-ready" aria-labelledby="ready-heading">
-        <h2 id="ready-heading">Ready for your 4-photo session?</h2>
+        <h2 id="ready-heading">Ready for your {session.requiredPhotoCount}-photo session?</h2>
         <p>Your camera will only start after you choose to begin.</p>
         <button type="button" onClick={() => beginCapture()}>Start camera</button>
       </section>
@@ -135,7 +136,7 @@ export function CapturePage() {
 
   return <main className="capture-page">
     <h1>UPSNAP</h1>
-    <p className="photo-progress">{isReplacingPhoto ? `Replacing photo ${(targetSlot ?? 0) + 1}` : `Photo ${(targetSlot ?? 0) + 1} / 4`}</p>
+    <p className="photo-progress">{isReplacingPhoto ? `Replacing photo ${(targetSlot ?? 0) + 1}` : `Photo ${(targetSlot ?? 0) + 1} / ${session.requiredPhotoCount}`}</p>
     {stage === "preview" && capturedPhoto ? <CapturedPhotoPreview photo={capturedPhoto} onRetake={handleCandidateRetake} onAccept={handleAccept} onBackToReview={isReplacingPhoto ? handleBackToReview : undefined} /> : <>
       {cameraError && <p className="capture-error" role="alert">{cameraError}</p>}
       {captureError && <p className="capture-error" role="alert">{captureError}</p>}
