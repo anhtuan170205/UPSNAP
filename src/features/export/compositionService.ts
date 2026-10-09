@@ -1,4 +1,5 @@
 import { getLayoutDefinition } from "../editor/layoutDefinitions";
+import { getBackgroundDefinition, getFilterDefinition, getFrameDefinition } from "../editor/styleDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
 
 interface SourceDimensions {
@@ -66,6 +67,9 @@ function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
 
 export async function renderComposition(session: PhotoSession): Promise<Blob> {
   const layout = getLayoutDefinition(session.selectedLayoutId);
+  const background = getBackgroundDefinition(session.selectedBackgroundId);
+  const filter = getFilterDefinition(session.selectedFilterId);
+  const frame = getFrameDefinition(session.selectedFrameId);
   const selection = session.layoutPhotoSelections[layout.id];
 
   if (selection.length !== layout.capacity) {
@@ -89,9 +93,10 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
     throw new Error("Your browser could not create the final image.");
   }
 
-  context.fillStyle = "#ffffff";
+  context.fillStyle = background.color;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
+  context.filter = filter.canvasFilter;
   images.forEach((image, index) => {
     const slot = layout.slots[index];
     const crop = getCenterCoverCrop(
@@ -110,6 +115,16 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
       slot.height,
     );
   });
+  context.filter = "none";
+
+  if (frame.color && frame.width > 0) {
+    context.strokeStyle = frame.color;
+    context.lineWidth = frame.width;
+    layout.slots.forEach((slot) => {
+      const inset = frame.width / 2;
+      context.strokeRect(slot.x + inset, slot.y + inset, slot.width - frame.width, slot.height - frame.width);
+    });
+  }
 
   return canvasToPng(canvas);
 }

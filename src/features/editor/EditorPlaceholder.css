@@ -3,6 +3,14 @@
 .layout-option { display: grid; gap: .25rem; padding: .75rem; background: #fff; color: #3b285f; border: 1px solid #b9aee0; }
 .layout-option span { font-size: .8rem; font-weight: 400; }
 .layout-option--selected { background: #5a3b9b; color: #fff; border-color: #5a3b9b; }
+.style-selectors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: 1.25rem 0; text-align: left; }
+.style-selectors label { display: grid; gap: .35rem; color: #3b285f; font-size: .875rem; font-weight: 700; }
+.style-selectors select { width: 100%; padding: .55rem; color: #3b285f; background: #fff; border: 1px solid #b9aee0; border-radius: .3rem; font: inherit; }
+.rendered-composition { margin: 1.5rem 0; padding: 1rem; border: 1px solid #d8d2e4; border-radius: .5rem; background: #f9f7fc; }
+.rendered-composition h3, .rendered-composition p { margin: 0; }
+.rendered-composition p { margin-top: .35rem; font-size: .9rem; }
+.rendered-composition img { display: block; width: min(100%, 360px); max-height: 36vh; margin: .85rem auto 0; object-fit: contain; box-shadow: 0 2px 12px rgb(41 27 74 / 18%); }
+.rendered-composition__error { color: #a61b1b; font-weight: 700; }
 .layout-preview { display: grid; gap: 1.5%; width: min(100%, 540px); margin: 0 auto 1.5rem; padding: 3%; background: #fff; box-shadow: 0 2px 12px rgb(41 27 74 / 14%); }
 .drag-instructions { margin: 0 0 .75rem; font-size: .9rem; }
 .layout-preview__slot { min-width: 0; overflow: hidden; background: #eeeaf5; cursor: grab; outline: 2px solid transparent; outline-offset: 2px; transition: opacity .15s ease, outline-color .15s ease, transform .15s ease; }
@@ -18,4 +26,4 @@
 .photo-tray__item img { width: 76px; height: 76px; border-radius: .4rem; object-fit: cover; box-shadow: 0 1px 4px rgb(41 27 74 / 18%); }
 .photo-tray__item--dragging { opacity: .45; cursor: grabbing; }
 .editor-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; }
-@media (max-width: 560px) { .layout-selector { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .layout-selector, .style-selectors { grid-template-columns: 1fr; } }

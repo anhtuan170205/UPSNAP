@@ -1,23 +1,51 @@
-import { useState, type DragEvent } from "react";
+import { useEffect, useState, type DragEvent } from "react";
 import { LAYOUT_DEFINITIONS, getLayoutDefinition, type LayoutId } from "./layoutDefinitions";
+import { BACKGROUND_DEFINITIONS, FILTER_DEFINITIONS, FRAME_DEFINITIONS, type BackgroundId, type FilterId, type FrameId } from "./styleDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
+import { renderComposition } from "../export/compositionService";
 import "./EditorPlaceholder.css";
 
 interface EditorPlaceholderProps {
   session: PhotoSession;
   onBackToReview: () => void;
   onLayoutChange: (layoutId: LayoutId) => void;
+  onFilterChange: (filterId: FilterId) => void;
+  onBackgroundChange: (backgroundId: BackgroundId) => void;
+  onFrameChange: (frameId: FrameId) => void;
   onPlaceLayoutPhoto: (layoutSlotIndex: number, sourceSlotIndex: number) => void;
   onReorderLayoutPhotos: (fromLayoutSlotIndex: number, toLayoutSlotIndex: number) => void;
   onPreviewFinal: () => void;
 }
 
-export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
+export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onFilterChange, onBackgroundChange, onFrameChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
   const layout = getLayoutDefinition(session.selectedLayoutId);
   const selection = session.layoutPhotoSelections[layout.id];
   const [draggedLayoutSlotIndex, setDraggedLayoutSlotIndex] = useState<number | null>(null);
   const [draggedSourceSlotIndex, setDraggedSourceSlotIndex] = useState<number | null>(null);
   const [dropTargetLayoutSlotIndex, setDropTargetLayoutSlotIndex] = useState<number | null>(null);
+  const [renderedPreviewUrl, setRenderedPreviewUrl] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+    let createdUrl: string | null = null;
+
+    void renderComposition(session)
+      .then((blob) => {
+        if (!isCurrent) return;
+        createdUrl = URL.createObjectURL(blob);
+        setRenderedPreviewUrl(createdUrl);
+        setPreviewError(null);
+      })
+      .catch(() => {
+        if (isCurrent) setPreviewError("We could not render this composition yet. Your photos are still available to edit.");
+      });
+
+    return () => {
+      isCurrent = false;
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
+  }, [session]);
 
   function clearDragState() {
     setDraggedLayoutSlotIndex(null);
@@ -65,6 +93,31 @@ export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onP
     <div className="layout-selector" role="radiogroup" aria-label="Photo layout">
       {LAYOUT_DEFINITIONS.map((definition) => <button key={definition.id} type="button" role="radio" aria-checked={definition.id === layout.id} className={definition.id === layout.id ? "layout-option layout-option--selected" : "layout-option"} onClick={() => onLayoutChange(definition.id)}>{definition.label}<span>{definition.capacity} photos</span></button>)}
     </div>
+
+    <div className="style-selectors">
+      <label>Filter
+        <select value={session.selectedFilterId} onChange={(event) => onFilterChange(event.target.value as FilterId)}>
+          {FILTER_DEFINITIONS.map((filter) => <option key={filter.id} value={filter.id}>{filter.label}</option>)}
+        </select>
+      </label>
+      <label>Background
+        <select value={session.selectedBackgroundId} onChange={(event) => onBackgroundChange(event.target.value as BackgroundId)}>
+          {BACKGROUND_DEFINITIONS.map((background) => <option key={background.id} value={background.id}>{background.label}</option>)}
+        </select>
+      </label>
+      <label>Frame
+        <select value={session.selectedFrameId} onChange={(event) => onFrameChange(event.target.value as FrameId)}>
+          {FRAME_DEFINITIONS.map((frame) => <option key={frame.id} value={frame.id}>{frame.label}</option>)}
+        </select>
+      </label>
+    </div>
+
+    <section className="rendered-composition" aria-labelledby="rendered-composition-heading">
+      <h3 id="rendered-composition-heading">Styled composition</h3>
+      <p>This is the same rendering used for your final PNG.</p>
+      {previewError && <p className="rendered-composition__error" role="alert">{previewError}</p>}
+      {renderedPreviewUrl ? <img src={renderedPreviewUrl} alt={`Styled ${layout.label} composition`} /> : !previewError && <p role="status">Updating composition preview...</p>}
+    </section>
 
     <p className="drag-instructions">Drag a photo in the preview onto another position to reorder it.</p>
     <div className="layout-preview" style={{ gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`, aspectRatio: `${layout.canvasWidth} / ${layout.canvasHeight}` }} aria-label={`${layout.label} composition preview`}>

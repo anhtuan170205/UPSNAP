@@ -8,7 +8,7 @@ import { CapturedPhotoPreview } from "../features/capture/CapturedPhotoPreview";
 import { capturePhoto } from "../features/capture/captureService";
 import { SessionReview } from "../features/session/SessionReview";
 import { useCamera } from "../hooks/useCamera";
-import { createPhotoSession, getNextEmptySlot, isSessionComplete, placeLayoutPhoto, reorderLayoutPhotos, replaceSessionPhoto, selectSessionLayout, type PhotoSession } from "../types/photoSession";
+import { createPhotoSession, getNextEmptySlot, isSessionComplete, placeLayoutPhoto, reorderLayoutPhotos, replaceSessionPhoto, selectSessionBackground, selectSessionFilter, selectSessionFrame, selectSessionLayout, type PhotoSession } from "../types/photoSession";
 import type { LayoutId } from "../features/editor/layoutDefinitions";
 
 const COUNTDOWN_SECONDS = 3;
@@ -128,7 +128,7 @@ export function CapturePage() {
   }
 
   if (stage === "editor") {
-    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} onPreviewFinal={() => setStage("final-preview")} /></main>;
+    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onFilterChange={(filterId) => setSession((current) => selectSessionFilter(current, filterId))} onBackgroundChange={(backgroundId) => setSession((current) => selectSessionBackground(current, backgroundId))} onFrameChange={(frameId) => setSession((current) => selectSessionFrame(current, frameId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} onPreviewFinal={() => setStage("final-preview")} /></main>;
   }
 
   if (stage === "final-preview") {
