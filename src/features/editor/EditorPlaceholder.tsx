@@ -9,9 +9,10 @@ interface EditorPlaceholderProps {
   onLayoutChange: (layoutId: LayoutId) => void;
   onPlaceLayoutPhoto: (layoutSlotIndex: number, sourceSlotIndex: number) => void;
   onReorderLayoutPhotos: (fromLayoutSlotIndex: number, toLayoutSlotIndex: number) => void;
+  onPreviewFinal: () => void;
 }
 
-export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPlaceLayoutPhoto, onReorderLayoutPhotos }: EditorPlaceholderProps) {
+export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
   const layout = getLayoutDefinition(session.selectedLayoutId);
   const selection = session.layoutPhotoSelections[layout.id];
   const [draggedLayoutSlotIndex, setDraggedLayoutSlotIndex] = useState<number | null>(null);
@@ -88,6 +89,9 @@ export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onP
         </div>)}
       </div>
     </section>
-    <button type="button" onClick={onBackToReview}>Back to review</button>
+    <div className="editor-actions">
+      <button type="button" onClick={onBackToReview}>Back to review</button>
+      <button type="button" onClick={onPreviewFinal}>Preview final image</button>
+    </div>
   </section>;
 }

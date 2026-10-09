@@ -17,4 +17,5 @@
 .photo-tray__item { flex: 0 0 76px; display: grid; gap: .3rem; color: #3b285f; font-size: .75rem; font-weight: 700; cursor: grab; }
 .photo-tray__item img { width: 76px; height: 76px; border-radius: .4rem; object-fit: cover; box-shadow: 0 1px 4px rgb(41 27 74 / 18%); }
 .photo-tray__item--dragging { opacity: .45; cursor: grabbing; }
+.editor-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; }
 @media (max-width: 560px) { .layout-selector { grid-template-columns: 1fr; } }

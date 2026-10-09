@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "./CapturePage.css";
 import { Countdown } from "../components/Countdown/Countdown";
 import { EditorPlaceholder } from "../features/editor/EditorPlaceholder";
+import { FinalPreview } from "../features/export/FinalPreview";
 import { CameraPreview } from "../features/camera/CameraPreview";
 import { CapturedPhotoPreview } from "../features/capture/CapturedPhotoPreview";
 import { capturePhoto } from "../features/capture/captureService";
@@ -11,7 +12,7 @@ import { createPhotoSession, getNextEmptySlot, isSessionComplete, placeLayoutPho
 import type { LayoutId } from "../features/editor/layoutDefinitions";
 
 const COUNTDOWN_SECONDS = 3;
-type CaptureStage = "ready" | "capture" | "preview" | "review" | "editor";
+type CaptureStage = "ready" | "capture" | "preview" | "review" | "editor" | "final-preview";
 
 export function CapturePage() {
   const [stage, setStage] = useState<CaptureStage>("ready");
@@ -101,6 +102,13 @@ export function CapturePage() {
     setIsRestartDialogOpen(false);
     setStage("capture");
   }
+  function handleNewSession() {
+    setSession(createPhotoSession());
+    setActiveSlot(null);
+    setCapturedPhoto(null);
+    setHasStartedSequence(false);
+    setStage("ready");
+  }
 
   if (stage === "review") {
     return <main className="capture-page">
@@ -120,7 +128,11 @@ export function CapturePage() {
   }
 
   if (stage === "editor") {
-    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} /></main>;
+    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} onPreviewFinal={() => setStage("final-preview")} /></main>;
+  }
+
+  if (stage === "final-preview") {
+    return <main className="capture-page"><h1>UPSNAP</h1><FinalPreview session={session} onBackToEditor={() => setStage("editor")} onNewSession={handleNewSession} /></main>;
   }
 
   if (stage === "ready") {

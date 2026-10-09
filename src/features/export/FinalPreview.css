@@ -1,0 +1,4 @@
+.final-preview { width: min(92vw, 760px); margin: 0 auto; padding: 2rem; border: 1px solid #d8d2e4; border-radius: .75rem; background: #fff; text-align: center; }
+.final-preview__image { display: block; width: min(100%, 620px); max-height: 70vh; margin: 1.5rem auto; object-fit: contain; box-shadow: 0 2px 12px rgb(41 27 74 / 18%); }
+.final-preview__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 1.5rem; }
+.final-preview__error { color: #a61b1b; font-weight: 700; }
