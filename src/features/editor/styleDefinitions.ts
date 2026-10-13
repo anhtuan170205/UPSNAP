@@ -1,11 +1,19 @@
-export type FilterId = "normal" | "black-and-white" | "warm" | "cool" | "vintage";
+export type PresetId = "normal" | "kodak-portra-400" | "kodak-gold-200" | "fujifilm-classic-chrome" | "ilford-hp5-plus" | "cinestill-800t";
 export type BackgroundId = "white" | "black" | "classic-red";
 export type FrameId = "none" | "white-border" | "black-border" | "red-border";
 
-export interface FilterDefinition {
-  id: FilterId;
+export interface PresetDefinition {
+  id: PresetId;
   label: string;
-  canvasFilter: string;
+  source: string | null;
+  exposure: number;
+  contrast: number;
+  saturation: number;
+  monochrome?: boolean;
+  shadowTint?: { color: readonly [number, number, number]; amount: number };
+  highlightTint?: { color: readonly [number, number, number]; amount: number };
+  toneCurve?: readonly (readonly [number, number])[];
+  grain: number;
 }
 
 export interface BackgroundDefinition {
@@ -21,13 +29,14 @@ export interface FrameDefinition {
   width: number;
 }
 
-export const FILTER_DEFINITIONS = [
-  { id: "normal", label: "Normal", canvasFilter: "none" },
-  { id: "black-and-white", label: "Black & White", canvasFilter: "grayscale(1)" },
-  { id: "warm", label: "Warm", canvasFilter: "sepia(.18) saturate(1.12) brightness(1.04)" },
-  { id: "cool", label: "Cool", canvasFilter: "saturate(.88) hue-rotate(165deg) brightness(1.03)" },
-  { id: "vintage", label: "Vintage", canvasFilter: "sepia(.35) saturate(.78) contrast(.9) brightness(1.08)" },
-] as const satisfies readonly FilterDefinition[];
+export const PRESET_DEFINITIONS = [
+  { id: "normal", label: "Normal", source: null, exposure: 0, contrast: 1, saturation: 1, grain: 0 },
+  { id: "kodak-portra-400", label: "Kodak Portra 400", source: "Color-Negative/Kodak Portra 400.xmp", exposure: .18, contrast: .95, saturation: .92, shadowTint: { color: [.36, .62, .82], amount: .08 }, highlightTint: { color: [1, .72, .46], amount: .12 }, grain: .025 },
+  { id: "kodak-gold-200", label: "Kodak Gold 200", source: "Color-Negative/Kodak Gold 200.xmp", exposure: .08, contrast: .9, saturation: 1.06, shadowTint: { color: [.34, .62, .82], amount: .12 }, highlightTint: { color: [1, .68, .28], amount: .16 }, grain: .032 },
+  { id: "fujifilm-classic-chrome", label: "Fujifilm Classic Chrome", source: "Color-Negative/Fujifilm Classic Chrome.xmp", exposure: 0, contrast: 1.12, saturation: .8, shadowTint: { color: [.28, .55, .72], amount: .08 }, highlightTint: { color: [1, .72, .48], amount: .045 }, grain: .02 },
+  { id: "ilford-hp5-plus", label: "Ilford HP5 Plus", source: "Black-White/Ilford HP5 Plus.xmp", exposure: .04, contrast: 1.08, saturation: 0, monochrome: true, grain: .04 },
+  { id: "cinestill-800t", label: "CineStill 800T", source: "Creative/Cinestill 800T.xmp", exposure: .2, contrast: 1.1, saturation: .94, shadowTint: { color: [.12, .48, .78], amount: .22 }, highlightTint: { color: [1, .48, .22], amount: .11 }, toneCurve: [[0, 20], [64, 55], [128, 128], [192, 196], [255, 235]], grain: .045 },
+] as const satisfies readonly PresetDefinition[];
 
 export const BACKGROUND_DEFINITIONS = [
   { id: "white", label: "White", color: "#ffffff" },
@@ -48,8 +57,8 @@ function getDefinition<T extends { id: string }>(definitions: readonly T[], id: 
   return definition;
 }
 
-export function getFilterDefinition(id: FilterId): FilterDefinition {
-  return getDefinition(FILTER_DEFINITIONS, id, "filter");
+export function getPresetDefinition(id: PresetId): PresetDefinition {
+  return getDefinition(PRESET_DEFINITIONS, id, "preset");
 }
 
 export function getBackgroundDefinition(id: BackgroundId): BackgroundDefinition {

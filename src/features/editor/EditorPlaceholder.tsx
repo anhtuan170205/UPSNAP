@@ -1,6 +1,6 @@
 import { useEffect, useState, type DragEvent } from "react";
 import { LAYOUT_DEFINITIONS, getLayoutDefinition, type LayoutId } from "./layoutDefinitions";
-import { BACKGROUND_DEFINITIONS, FILTER_DEFINITIONS, FRAME_DEFINITIONS, type BackgroundId, type FilterId, type FrameId } from "./styleDefinitions";
+import { BACKGROUND_DEFINITIONS, FRAME_DEFINITIONS, PRESET_DEFINITIONS, type BackgroundId, type FrameId, type PresetId } from "./styleDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
 import { renderComposition } from "../export/compositionService";
 import "./EditorPlaceholder.css";
@@ -9,7 +9,7 @@ interface EditorPlaceholderProps {
   session: PhotoSession;
   onBackToReview: () => void;
   onLayoutChange: (layoutId: LayoutId) => void;
-  onFilterChange: (filterId: FilterId) => void;
+  onPresetChange: (presetId: PresetId) => void;
   onBackgroundChange: (backgroundId: BackgroundId) => void;
   onFrameChange: (frameId: FrameId) => void;
   onPlaceLayoutPhoto: (layoutSlotIndex: number, sourceSlotIndex: number) => void;
@@ -17,7 +17,7 @@ interface EditorPlaceholderProps {
   onPreviewFinal: () => void;
 }
 
-export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onFilterChange, onBackgroundChange, onFrameChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
+export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPresetChange, onBackgroundChange, onFrameChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
   const layout = getLayoutDefinition(session.selectedLayoutId);
   const selection = session.layoutPhotoSelections[layout.id];
   const [draggedLayoutSlotIndex, setDraggedLayoutSlotIndex] = useState<number | null>(null);
@@ -95,9 +95,9 @@ export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onF
     </div>
 
     <div className="style-selectors">
-      <label>Filter
-        <select value={session.selectedFilterId} onChange={(event) => onFilterChange(event.target.value as FilterId)}>
-          {FILTER_DEFINITIONS.map((filter) => <option key={filter.id} value={filter.id}>{filter.label}</option>)}
+      <label>Film preset
+        <select value={session.selectedPresetId} onChange={(event) => onPresetChange(event.target.value as PresetId)}>
+          {PRESET_DEFINITIONS.map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
         </select>
       </label>
       <label>Background

@@ -8,9 +8,9 @@ afterEach(() => {
 });
 
 function installCanvasMock() {
-  const filterHistory: string[] = [];
-  let activeFilter = "";
   const strokeRect = vi.fn();
+  const getImageData = vi.fn(() => ({ data: new Uint8ClampedArray(600 * 600 * 4) }) as ImageData);
+  const putImageData = vi.fn();
   const context = {
     fillStyle: "",
     fillRect: vi.fn(),
@@ -18,14 +18,9 @@ function installCanvasMock() {
     strokeStyle: "",
     lineWidth: 0,
     strokeRect,
+    getImageData,
+    putImageData,
   } as unknown as CanvasRenderingContext2D;
-  Object.defineProperty(context, "filter", {
-    get: () => activeFilter,
-    set: (value: string) => {
-      activeFilter = value;
-      filterHistory.push(value);
-    },
-  });
   const canvas = {
     width: 0,
     height: 0,
@@ -48,7 +43,7 @@ function installCanvasMock() {
 
   vi.stubGlobal("document", { createElement: vi.fn(() => canvas) });
   vi.stubGlobal("Image", FakeImage);
-  return { canvas, context, filterHistory, strokeRect };
+  return { canvas, context, getImageData, putImageData, strokeRect };
 }
 
 function createCompleteSession(layoutId: LayoutId) {
@@ -119,19 +114,20 @@ describe("composition export", () => {
     );
   });
 
-  it("paints the selected background, filters photos, and draws a frame after them", async () => {
-    const { context, filterHistory, strokeRect } = installCanvasMock();
+  it("paints the selected background, adapts photo pixels, and draws a frame after them", async () => {
+    const { context, getImageData, putImageData, strokeRect } = installCanvasMock();
     const session = {
       ...createCompleteSession("grid-2x2"),
       selectedBackgroundId: "classic-red" as const,
-      selectedFilterId: "vintage" as const,
+      selectedPresetId: "cinestill-800t" as const,
       selectedFrameId: "black-border" as const,
     };
 
     await renderComposition(session);
 
     expect(context.fillStyle).toBe("#c92332");
-    expect(filterHistory).toEqual(["sepia(.35) saturate(.78) contrast(.9) brightness(1.08)", "none"]);
+    expect(getImageData).toHaveBeenCalledTimes(4);
+    expect(putImageData).toHaveBeenCalledTimes(4);
     expect(context.strokeStyle).toBe("#151515");
     expect(context.lineWidth).toBe(22);
     expect(strokeRect).toHaveBeenCalledTimes(4);

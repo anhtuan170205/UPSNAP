@@ -1,5 +1,6 @@
 import { getLayoutDefinition } from "../editor/layoutDefinitions";
-import { getBackgroundDefinition, getFilterDefinition, getFrameDefinition } from "../editor/styleDefinitions";
+import { applyPresetToImageData } from "../editor/presetProcessing";
+import { getBackgroundDefinition, getFrameDefinition, getPresetDefinition } from "../editor/styleDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
 
 interface SourceDimensions {
@@ -68,7 +69,7 @@ function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
 export async function renderComposition(session: PhotoSession): Promise<Blob> {
   const layout = getLayoutDefinition(session.selectedLayoutId);
   const background = getBackgroundDefinition(session.selectedBackgroundId);
-  const filter = getFilterDefinition(session.selectedFilterId);
+  const preset = getPresetDefinition(session.selectedPresetId);
   const frame = getFrameDefinition(session.selectedFrameId);
   const selection = session.layoutPhotoSelections[layout.id];
 
@@ -96,9 +97,9 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
   context.fillStyle = background.color;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  context.filter = filter.canvasFilter;
   images.forEach((image, index) => {
     const slot = layout.slots[index];
+    const sourcePhoto = selectedPhotos[index];
     const crop = getCenterCoverCrop(
       { width: image.naturalWidth || image.width, height: image.naturalHeight || image.height },
       { width: slot.width, height: slot.height },
@@ -114,8 +115,10 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
       slot.width,
       slot.height,
     );
+    const imageData = context.getImageData(slot.x, slot.y, slot.width, slot.height);
+    applyPresetToImageData(imageData, preset, sourcePhoto.capturedAt + slot.index * 7919);
+    context.putImageData(imageData, slot.x, slot.y);
   });
-  context.filter = "none";
 
   if (frame.color && frame.width > 0) {
     context.strokeStyle = frame.color;
