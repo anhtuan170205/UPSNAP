@@ -1,5 +1,5 @@
 import { LAYOUT_DEFINITIONS, getLayoutDefinition, type LayoutId } from "../features/editor/layoutDefinitions";
-import type { BackgroundId, FrameId, PresetId } from "../features/editor/styleDefinitions";
+import type { PresetId, TemplateId } from "../features/editor/styleDefinitions";
 
 export interface CapturedPhoto {
   slotIndex: number;
@@ -15,8 +15,7 @@ export interface PhotoSession {
   selectedLayoutId: LayoutId;
   layoutPhotoSelections: LayoutPhotoSelections;
   selectedPresetId: PresetId;
-  selectedBackgroundId: BackgroundId;
-  selectedFrameId: FrameId;
+  selectedTemplateId: TemplateId;
 }
 
 export const REQUIRED_PHOTO_COUNT = 8;
@@ -37,8 +36,7 @@ export function createPhotoSession(): PhotoSession {
     selectedLayoutId: "grid-2x2",
     layoutPhotoSelections: createDefaultLayoutPhotoSelections(),
     selectedPresetId: "normal",
-    selectedBackgroundId: "white",
-    selectedFrameId: "none",
+    selectedTemplateId: "white",
   };
 }
 
@@ -68,12 +66,8 @@ export function selectSessionPreset(session: PhotoSession, presetId: PresetId): 
   return { ...session, selectedPresetId: presetId };
 }
 
-export function selectSessionBackground(session: PhotoSession, backgroundId: BackgroundId): PhotoSession {
-  return { ...session, selectedBackgroundId: backgroundId };
-}
-
-export function selectSessionFrame(session: PhotoSession, frameId: FrameId): PhotoSession {
-  return { ...session, selectedFrameId: frameId };
+export function selectSessionTemplate(session: PhotoSession, templateId: TemplateId): PhotoSession {
+  return { ...session, selectedTemplateId: templateId };
 }
 
 export function placeLayoutPhoto(

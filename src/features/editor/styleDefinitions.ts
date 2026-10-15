@@ -1,6 +1,5 @@
 export type PresetId = "normal" | "kodak-portra-400" | "kodak-gold-200" | "fujifilm-classic-chrome" | "ilford-hp5-plus" | "cinestill-800t";
-export type BackgroundId = "white" | "black" | "classic-red";
-export type FrameId = "none" | "white-border" | "black-border" | "red-border";
+export type TemplateId = "white" | "black" | "classic-red" | "stripe";
 
 export interface PresetDefinition {
   id: PresetId;
@@ -16,17 +15,14 @@ export interface PresetDefinition {
   grain: number;
 }
 
-export interface BackgroundDefinition {
-  id: BackgroundId;
+export interface TemplateDefinition {
+  id: TemplateId;
   label: string;
-  color: string;
-}
-
-export interface FrameDefinition {
-  id: FrameId;
-  label: string;
-  color: string | null;
-  width: number;
+  backgroundColor: string;
+  borderColor: string;
+  borderWidth: number;
+  stripeColor?: string;
+  stripeWidth?: number;
 }
 
 export const PRESET_DEFINITIONS = [
@@ -38,18 +34,12 @@ export const PRESET_DEFINITIONS = [
   { id: "cinestill-800t", label: "CineStill 800T", source: "Creative/Cinestill 800T.xmp", exposure: .2, contrast: 1.1, saturation: .94, shadowTint: { color: [.12, .48, .78], amount: .22 }, highlightTint: { color: [1, .48, .22], amount: .11 }, toneCurve: [[0, 20], [64, 55], [128, 128], [192, 196], [255, 235]], grain: .045 },
 ] as const satisfies readonly PresetDefinition[];
 
-export const BACKGROUND_DEFINITIONS = [
-  { id: "white", label: "White", color: "#ffffff" },
-  { id: "black", label: "Black", color: "#151515" },
-  { id: "classic-red", label: "Classic Red", color: "#c92332" },
-] as const satisfies readonly BackgroundDefinition[];
-
-export const FRAME_DEFINITIONS = [
-  { id: "none", label: "None", color: null, width: 0 },
-  { id: "white-border", label: "White Border", color: "#ffffff", width: 22 },
-  { id: "black-border", label: "Black Border", color: "#151515", width: 22 },
-  { id: "red-border", label: "Red Border", color: "#c92332", width: 22 },
-] as const satisfies readonly FrameDefinition[];
+export const TEMPLATE_DEFINITIONS = [
+  { id: "white", label: "White", backgroundColor: "#ffffff", borderColor: "#ffffff", borderWidth: 22 },
+  { id: "black", label: "Black", backgroundColor: "#151515", borderColor: "#151515", borderWidth: 22 },
+  { id: "classic-red", label: "Classic Red", backgroundColor: "#c92332", borderColor: "#c92332", borderWidth: 22 },
+  { id: "stripe", label: "Stripe", backgroundColor: "#151515", borderColor: "#ffffff", borderWidth: 22, stripeColor: "#ffffff", stripeWidth: 48 },
+] as const satisfies readonly TemplateDefinition[];
 
 function getDefinition<T extends { id: string }>(definitions: readonly T[], id: T["id"], kind: string): T {
   const definition = definitions.find((candidate) => candidate.id === id);
@@ -61,10 +51,6 @@ export function getPresetDefinition(id: PresetId): PresetDefinition {
   return getDefinition(PRESET_DEFINITIONS, id, "preset");
 }
 
-export function getBackgroundDefinition(id: BackgroundId): BackgroundDefinition {
-  return getDefinition(BACKGROUND_DEFINITIONS, id, "background");
-}
-
-export function getFrameDefinition(id: FrameId): FrameDefinition {
-  return getDefinition(FRAME_DEFINITIONS, id, "frame");
+export function getTemplateDefinition(id: TemplateId): TemplateDefinition {
+  return getDefinition(TEMPLATE_DEFINITIONS, id, "template");
 }

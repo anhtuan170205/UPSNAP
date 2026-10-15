@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getLayoutDefinition } from "../features/editor/layoutDefinitions";
-import { createPhotoSession, isSessionComplete, placeLayoutPhoto, reorderLayoutPhotos, replaceSessionPhoto, selectSessionBackground, selectSessionFrame, selectSessionLayout, selectSessionPreset } from "./photoSession";
+import { createPhotoSession, isSessionComplete, placeLayoutPhoto, reorderLayoutPhotos, replaceSessionPhoto, selectSessionLayout, selectSessionPreset, selectSessionTemplate } from "./photoSession";
 
 describe("photo sessions", () => {
   it("creates an eight-photo session with default selections for every layout", () => {
@@ -10,8 +10,7 @@ describe("photo sessions", () => {
     expect(session.photos).toHaveLength(8);
     expect(session.selectedLayoutId).toBe("grid-2x2");
     expect(session.selectedPresetId).toBe("normal");
-    expect(session.selectedBackgroundId).toBe("white");
-    expect(session.selectedFrameId).toBe("none");
+    expect(session.selectedTemplateId).toBe("white");
     expect(session.layoutPhotoSelections["grid-2x2"]).toEqual([0, 1, 2, 3]);
     expect(session.layoutPhotoSelections["strip-1x4"]).toEqual([0, 1, 2, 3]);
     expect(session.layoutPhotoSelections["grid-2x3"]).toEqual([0, 1, 2, 3, 4, 5]);
@@ -48,15 +47,11 @@ describe("photo sessions", () => {
 
   it("updates global composition styles without changing layout or photos", () => {
     const original = createPhotoSession();
-    const styled = selectSessionFrame(
-      selectSessionBackground(selectSessionPreset(original, "kodak-gold-200"), "classic-red"),
-      "black-border",
-    );
+    const styled = selectSessionTemplate(selectSessionPreset(original, "kodak-gold-200"), "stripe");
 
     expect(styled).toMatchObject({
       selectedPresetId: "kodak-gold-200",
-      selectedBackgroundId: "classic-red",
-      selectedFrameId: "black-border",
+      selectedTemplateId: "stripe",
       selectedLayoutId: "grid-2x2",
     });
     expect(styled.photos).toBe(original.photos);

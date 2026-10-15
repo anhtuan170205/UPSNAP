@@ -1,6 +1,6 @@
 import { useEffect, useState, type DragEvent } from "react";
 import { LAYOUT_DEFINITIONS, getLayoutDefinition, type LayoutId } from "./layoutDefinitions";
-import { BACKGROUND_DEFINITIONS, FRAME_DEFINITIONS, PRESET_DEFINITIONS, type BackgroundId, type FrameId, type PresetId } from "./styleDefinitions";
+import { PRESET_DEFINITIONS, TEMPLATE_DEFINITIONS, type PresetId, type TemplateId } from "./styleDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
 import { renderComposition } from "../export/compositionService";
 import "./EditorPlaceholder.css";
@@ -10,14 +10,13 @@ interface EditorPlaceholderProps {
   onBackToReview: () => void;
   onLayoutChange: (layoutId: LayoutId) => void;
   onPresetChange: (presetId: PresetId) => void;
-  onBackgroundChange: (backgroundId: BackgroundId) => void;
-  onFrameChange: (frameId: FrameId) => void;
+  onTemplateChange: (templateId: TemplateId) => void;
   onPlaceLayoutPhoto: (layoutSlotIndex: number, sourceSlotIndex: number) => void;
   onReorderLayoutPhotos: (fromLayoutSlotIndex: number, toLayoutSlotIndex: number) => void;
   onPreviewFinal: () => void;
 }
 
-export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPresetChange, onBackgroundChange, onFrameChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
+export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPresetChange, onTemplateChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
   const layout = getLayoutDefinition(session.selectedLayoutId);
   const selection = session.layoutPhotoSelections[layout.id];
   const [draggedLayoutSlotIndex, setDraggedLayoutSlotIndex] = useState<number | null>(null);
@@ -100,17 +99,17 @@ export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onP
           {PRESET_DEFINITIONS.map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
         </select>
       </label>
-      <label>Background
-        <select value={session.selectedBackgroundId} onChange={(event) => onBackgroundChange(event.target.value as BackgroundId)}>
-          {BACKGROUND_DEFINITIONS.map((background) => <option key={background.id} value={background.id}>{background.label}</option>)}
-        </select>
-      </label>
-      <label>Frame
-        <select value={session.selectedFrameId} onChange={(event) => onFrameChange(event.target.value as FrameId)}>
-          {FRAME_DEFINITIONS.map((frame) => <option key={frame.id} value={frame.id}>{frame.label}</option>)}
-        </select>
-      </label>
     </div>
+
+    <section className="template-selector" aria-labelledby="template-heading">
+      <h3 id="template-heading">Template</h3>
+      <div className="template-selector__options" role="radiogroup" aria-label="Composition template">
+        {TEMPLATE_DEFINITIONS.map((template) => <button key={template.id} type="button" role="radio" aria-checked={template.id === session.selectedTemplateId} className={template.id === session.selectedTemplateId ? `template-option template-option--${template.id} template-option--selected` : `template-option template-option--${template.id}`} onClick={() => onTemplateChange(template.id)}>
+          <span className="template-option__swatch" aria-hidden="true"><span /></span>
+          <span>{template.label}</span>
+        </button>)}
+      </div>
+    </section>
 
     <section className="rendered-composition" aria-labelledby="rendered-composition-heading">
       <h3 id="rendered-composition-heading">Styled composition</h3>

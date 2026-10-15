@@ -1,6 +1,6 @@
 import { getLayoutDefinition } from "../editor/layoutDefinitions";
 import { applyPresetToImageData } from "../editor/presetProcessing";
-import { getBackgroundDefinition, getFrameDefinition, getPresetDefinition } from "../editor/styleDefinitions";
+import { getPresetDefinition, getTemplateDefinition, type TemplateDefinition } from "../editor/styleDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
 
 interface SourceDimensions {
@@ -66,11 +66,31 @@ function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
   });
 }
 
+function paintTemplateBackground(
+  context: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  template: TemplateDefinition,
+): void {
+  context.fillStyle = template.backgroundColor;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (!template.stripeColor || !template.stripeWidth) return;
+
+  const diagonal = Math.hypot(canvas.width, canvas.height);
+  context.save();
+  context.translate(canvas.width / 2, canvas.height / 2);
+  context.rotate(-Math.PI / 4);
+  context.fillStyle = template.stripeColor;
+  for (let offset = -diagonal; offset < diagonal; offset += template.stripeWidth * 2) {
+    context.fillRect(offset, -diagonal, template.stripeWidth, diagonal * 2);
+  }
+  context.restore();
+}
+
 export async function renderComposition(session: PhotoSession): Promise<Blob> {
   const layout = getLayoutDefinition(session.selectedLayoutId);
-  const background = getBackgroundDefinition(session.selectedBackgroundId);
+  const template = getTemplateDefinition(session.selectedTemplateId);
   const preset = getPresetDefinition(session.selectedPresetId);
-  const frame = getFrameDefinition(session.selectedFrameId);
   const selection = session.layoutPhotoSelections[layout.id];
 
   if (selection.length !== layout.capacity) {
@@ -94,8 +114,7 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
     throw new Error("Your browser could not create the final image.");
   }
 
-  context.fillStyle = background.color;
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  paintTemplateBackground(context, canvas, template);
 
   images.forEach((image, index) => {
     const slot = layout.slots[index];
@@ -120,12 +139,12 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
     context.putImageData(imageData, slot.x, slot.y);
   });
 
-  if (frame.color && frame.width > 0) {
-    context.strokeStyle = frame.color;
-    context.lineWidth = frame.width;
+  if (template.borderWidth > 0) {
+    context.strokeStyle = template.borderColor;
+    context.lineWidth = template.borderWidth;
     layout.slots.forEach((slot) => {
-      const inset = frame.width / 2;
-      context.strokeRect(slot.x + inset, slot.y + inset, slot.width - frame.width, slot.height - frame.width);
+      const inset = template.borderWidth / 2;
+      context.strokeRect(slot.x + inset, slot.y + inset, slot.width - template.borderWidth, slot.height - template.borderWidth);
     });
   }
 

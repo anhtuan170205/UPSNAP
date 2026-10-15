@@ -14,6 +14,10 @@ function installCanvasMock() {
   const context = {
     fillStyle: "",
     fillRect: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    translate: vi.fn(),
+    rotate: vi.fn(),
     drawImage: vi.fn(),
     strokeStyle: "",
     lineWidth: 0,
@@ -114,13 +118,12 @@ describe("composition export", () => {
     );
   });
 
-  it("paints the selected background, adapts photo pixels, and draws a frame after them", async () => {
+  it("paints the selected template, adapts photo pixels, and draws its border after them", async () => {
     const { context, getImageData, putImageData, strokeRect } = installCanvasMock();
     const session = {
       ...createCompleteSession("grid-2x2"),
-      selectedBackgroundId: "classic-red" as const,
       selectedPresetId: "cinestill-800t" as const,
-      selectedFrameId: "black-border" as const,
+      selectedTemplateId: "classic-red" as const,
     };
 
     await renderComposition(session);
@@ -128,9 +131,23 @@ describe("composition export", () => {
     expect(context.fillStyle).toBe("#c92332");
     expect(getImageData).toHaveBeenCalledTimes(4);
     expect(putImageData).toHaveBeenCalledTimes(4);
-    expect(context.strokeStyle).toBe("#151515");
+    expect(context.strokeStyle).toBe("#c92332");
     expect(context.lineWidth).toBe(22);
     expect(strokeRect).toHaveBeenCalledTimes(4);
     expect(strokeRect.mock.calls[0]).toEqual([59, 59, 578, 578]);
+  });
+
+  it("draws deterministic diagonal stripes for the stripe template", async () => {
+    const { canvas, context } = installCanvasMock();
+    const session = { ...createCompleteSession("grid-2x2"), selectedTemplateId: "stripe" as const };
+
+    await renderComposition(session);
+
+    expect(context.fillRect).toHaveBeenCalledWith(0, 0, canvas.width, canvas.height);
+    expect(context.save).toHaveBeenCalledOnce();
+    expect(context.translate).toHaveBeenCalledWith(canvas.width / 2, canvas.height / 2);
+    expect(context.rotate).toHaveBeenCalledWith(-Math.PI / 4);
+    expect(context.restore).toHaveBeenCalledOnce();
+    expect(context.strokeStyle).toBe("#ffffff");
   });
 });
