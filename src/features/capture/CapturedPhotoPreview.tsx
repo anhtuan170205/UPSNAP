@@ -18,13 +18,13 @@ export function CapturedPhotoPreview({
       <img src={photo} alt="Captured" />
 
       <div className="captured-photo-actions">
-        {onBackToReview && <button type="button" onClick={onBackToReview}>Back to review</button>}
+        {onBackToReview && <button className="text-button" type="button" onClick={onBackToReview}>Back to review</button>}
         <button onClick={onRetake}>
           Retake
         </button>
 
-        <button onClick={onAccept}>
-          Accept
+        <button className="primary" onClick={onAccept}>
+          Use photo
         </button>
       </div>
     </div>

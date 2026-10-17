@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./CapturePage.css";
 import { Countdown } from "../components/Countdown/Countdown";
-import { EditorPlaceholder } from "../features/editor/EditorPlaceholder";
-import { FinalPreview } from "../features/export/FinalPreview";
+import { PhotoEditor } from "../features/editor/PhotoEditor";
+import { BoothHeader } from "../components/BoothHeader";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { CameraPreview } from "../features/camera/CameraPreview";
 import { CapturedPhotoPreview } from "../features/capture/CapturedPhotoPreview";
 import { capturePhoto } from "../features/capture/captureService";
@@ -12,7 +13,7 @@ import { addSessionSticker, createPhotoSession, getNextEmptySlot, isSessionCompl
 import type { LayoutId } from "../features/editor/layoutDefinitions";
 
 const COUNTDOWN_SECONDS = 3;
-type CaptureStage = "ready" | "capture" | "preview" | "review" | "editor" | "final-preview";
+type CaptureStage = "ready" | "capture" | "preview" | "review" | "editor";
 
 export function CapturePage() {
   const [stage, setStage] = useState<CaptureStage>("ready");
@@ -99,6 +100,8 @@ export function CapturePage() {
     setSession(createPhotoSession());
     setActiveSlot(null);
     setCapturedPhoto(null);
+    setHasStartedSequence(false);
+    setCaptureError(null);
     setIsRestartDialogOpen(false);
     setStage("capture");
   }
@@ -112,52 +115,46 @@ export function CapturePage() {
 
   if (stage === "review") {
     return <main className="capture-page">
-      <h1>UPSNAP</h1>
+      <BoothHeader stage="review" />
       <SessionReview session={session} onRetakePhoto={beginCapture} onRetakeAll={() => setIsRestartDialogOpen(true)} onContinue={() => setStage("editor")} />
-      {isRestartDialogOpen && <div className="confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="restart-heading">
-        <div className="confirmation-dialog__content">
-          <h2 id="restart-heading">Retake all photos?</h2>
-          <p>This clears the {session.requiredPhotoCount} accepted photos and starts a new session.</p>
-          <div className="captured-photo-actions">
-            <button type="button" onClick={() => setIsRestartDialogOpen(false)}>Keep photos</button>
-            <button type="button" onClick={handleRestartAll}>Retake all photos</button>
-          </div>
-        </div>
-      </div>}
+      {isRestartDialogOpen && <ConfirmDialog title="Retake all photos?" confirmLabel="Retake all photos" onCancel={() => setIsRestartDialogOpen(false)} onConfirm={handleRestartAll}>This clears your {session.requiredPhotoCount} photos and edits and starts a fresh capture.</ConfirmDialog>}
     </main>;
   }
 
   if (stage === "editor") {
-    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPresetChange={(presetId) => setSession((current) => selectSessionPreset(current, presetId))} onTemplateChange={(templateId) => setSession((current) => selectSessionTemplate(current, templateId))} onAddSticker={(stickerId) => setSession((current) => addSessionSticker(current, stickerId))} onUpdateSticker={(instanceId, update) => setSession((current) => updateSessionSticker(current, instanceId, update))} onRemoveSticker={(instanceId) => setSession((current) => removeSessionSticker(current, instanceId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} onPreviewFinal={() => setStage("final-preview")} /></main>;
-  }
-
-  if (stage === "final-preview") {
-    return <main className="capture-page"><h1>UPSNAP</h1><FinalPreview session={session} onBackToEditor={() => setStage("editor")} onNewSession={handleNewSession} /></main>;
+    return <main className="capture-page"><BoothHeader stage="create" /><PhotoEditor session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPresetChange={(presetId) => setSession((current) => selectSessionPreset(current, presetId))} onTemplateChange={(templateId) => setSession((current) => selectSessionTemplate(current, templateId))} onAddSticker={(stickerId) => setSession((current) => addSessionSticker(current, stickerId))} onUpdateSticker={(instanceId, update) => setSession((current) => updateSessionSticker(current, instanceId, update))} onRemoveSticker={(instanceId) => setSession((current) => removeSessionSticker(current, instanceId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} onNewSession={handleNewSession} /></main>;
   }
 
   if (stage === "ready") {
     return <main className="capture-page">
-      <h1>UPSNAP</h1>
+      <BoothHeader stage="capture" />
       <section className="capture-ready" aria-labelledby="ready-heading">
-        <h2 id="ready-heading">Ready for your {session.requiredPhotoCount}-photo session?</h2>
-        <p>Your camera will only start after you choose to begin.</p>
-        <button type="button" onClick={() => beginCapture()}>Start camera</button>
+        <div className="ready-copy"><p className="eyebrow">A little photo booth, just for us.</p>
+        <h1 id="ready-heading">You and me.<br />A silly face.<br /><span className="accent">A moment to keep.</span></h1>
+        <p>Make a face. Lean a little closer. Turn {session.requiredPhotoCount} tiny moments together into a print we’ll smile at later.</p>
+        <button className="primary" type="button" onClick={() => beginCapture()}>Start camera <span aria-hidden="true">↗</span></button>
+        <p className="privacy-note">No sign-up. No uploads. Just us.</p></div>
+        <div className="booth-art" aria-hidden="true"><div className="souvenir-stamp">US, TODAY<br />♥<br />FOR KEEPS</div><div className="sample-strip"><div>☺</div><div>♥</div><div>✌</div><span>YOU + ME · RIGHT NOW</span></div><span className="art-caption">our little piece of today.</span></div>
       </section>
+      <div className="ready-footer"><span>01 &nbsp; GET CLOSE</span><span>02 &nbsp; MAKE A MEMORY</span><span>03 &nbsp; KEEP IT FOREVER</span></div>
     </main>;
   }
 
   return <main className="capture-page">
-    <h1>UPSNAP</h1>
+    <BoothHeader stage="capture" />
+    <div className="capture-heading"><p className="eyebrow">You look like my favorite memory</p><h1>{stage === "preview" ? "One to keep forever?" : "Come a little closer."}</h1></div>
     <p className="photo-progress">{isReplacingPhoto ? `Replacing photo ${(targetSlot ?? 0) + 1}` : `Photo ${(targetSlot ?? 0) + 1} / ${session.requiredPhotoCount}`}</p>
     {stage === "preview" && capturedPhoto ? <CapturedPhotoPreview photo={capturedPhoto} onRetake={handleCandidateRetake} onAccept={handleAccept} onBackToReview={isReplacingPhoto ? handleBackToReview : undefined} /> : <>
       {cameraError && <p className="capture-error" role="alert">{cameraError}</p>}
       {captureError && <p className="capture-error" role="alert">{captureError}</p>}
       {stream ? <>
         <div className="camera-container"><CameraPreview stream={stream} videoRef={videoRef} />{countdown !== null && <Countdown value={countdown} />}</div>
+        <div className="capture-actions">
         {isReplacingPhoto ? <>
-          <button className="capture-button" type="button" onClick={handleCapture} disabled={isCountingDown}>{isCountingDown ? "Get ready..." : "Take replacement"}</button>
+          <button className="capture-button primary" type="button" onClick={handleCapture} disabled={isCountingDown}>{isCountingDown ? "Get ready..." : "Take replacement"}</button>
           <button type="button" className="back-to-review" onClick={handleBackToReview} disabled={isCountingDown}>Back to review</button>
-        </> : hasStartedSequence ? <p className="automatic-capture-status" role="status">{isCountingDown ? "Get ready..." : "Next photo starts in 1 second."}</p> : <button className="capture-button" type="button" onClick={handleCapture} disabled={isCountingDown}>Start photo sequence</button>}
+        </> : hasStartedSequence ? <p className="automatic-capture-status" role="status">{isCountingDown ? "Get ready..." : "Next photo starts in 1 second."}</p> : <button className="capture-button primary" type="button" onClick={handleCapture} disabled={isCountingDown}>Start photos</button>}
+        </div>
       </> : !cameraError ? <p role="status">Starting camera...</p> : <button type="button" onClick={() => setStage("ready")}>Try again</button>}
     </>}
   </main>;

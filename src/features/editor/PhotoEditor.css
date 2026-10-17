@@ -1,0 +1,51 @@
+.photo-editor { width: 100%; }
+.editor-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 340px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--paper); }
+.composition-stage { display: flex; flex-direction: column; align-items: center; padding: 24px 32px; background-color: #ece5d7; background-image: radial-gradient(#c8bcaa 0.6px, transparent 0.6px); background-size: 10px 10px; min-width: 0; }
+.preview-caption { display: flex; justify-content: space-between; width: 100%; color: #726757; font-size: 9px; margin-bottom: 24px; }
+.composition-canvas { position: relative; background: var(--paper); box-shadow: 0 10px 25px #37271626; flex: 0 0 auto; touch-action: none; }
+.composition-canvas > img { display: block; width: 100%; height: 100%; }
+.preview-placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; color: var(--muted); font-size: 13px; text-align: center; }
+.preview-note { color: #716555; font: italic 14px Georgia, serif; margin: 22px 0 0; }
+button.photo-slot { position: absolute; padding: 0; border: 2px solid transparent; border-radius: 0; background: transparent; cursor: grab; }
+button.photo-slot:hover { background: #fff2; border-color: white; }
+button.photo-slot.is-selected, button.photo-slot.is-drop-target { border: 2px solid var(--red); box-shadow: inset 0 0 0 2px white; background: transparent; }
+.photo-slot > span { position: absolute; top: 6px; left: 6px; background: var(--paper); border-radius: 50%; width: 23px; height: 23px; display: grid; place-items: center; font: 11px monospace; color: var(--ink); box-shadow: 0 1px 4px #0002; }
+.photo-slot.is-selected > span { color: white; background: var(--red); }
+.editor-tools { min-width: 0; border-left: 1px solid var(--line); }
+.tool-tabs { display: flex; padding: 8px; gap: 3px; border-bottom: 1px solid var(--line); }
+.tool-tabs > button { flex: 1; padding: 12px 5px; border: 0; font-size: 12px; border-radius: 6px; white-space: nowrap; background: transparent; }
+.tool-tabs > button[aria-selected="true"] { background: var(--ink); color: white; }
+.tool-panel { padding: 24px; }
+.tool-panel h2 { margin-bottom: 16px; }
+.layout-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 30px; }
+.layout-choice { position: relative; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 4px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.layout-choice input, .frame-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.layout-choice:has(:checked), .frame-choice:has(:checked) { outline: 2px solid var(--red); outline-offset: 1px; background: #fbede5; }
+.layout-choice:has(:focus-visible), .frame-choice:has(:focus-visible) { outline: 3px solid #956414; outline-offset: 4px; }
+.layout-choice strong { font-size: 10px; }.layout-choice small { color: var(--muted); font-size: 10px; }
+.layout-mini { display: grid; gap: 3px; height: 44px; width: 33px; padding: 3px; background: #e7ddcb; }
+.layout-mini i { background: #9e8f77; }
+.selection-note { font-size: 11px; color: var(--red); font-weight: 700; margin-top: 18px; }
+.photo-tray { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+button.tray-photo { position: relative; padding: 0; overflow: hidden; border-radius: 4px; aspect-ratio: 1; }
+.tray-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tray-photo > span { position: absolute; bottom: 0; left: 0; background: var(--paper); padding: 2px 5px; font: 9px monospace; }
+.tray-photo[aria-pressed="true"] { outline: 2px solid var(--red); outline-offset: 2px; }
+.frame-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 30px; }
+.frame-choice { position: relative; cursor: pointer; display: grid; gap: 8px; font-size: 12px; padding: 8px; text-align: center; border: 1px solid var(--line); border-radius: 6px; }
+.frame-swatch { display: block; height: 54px; border: 1px solid var(--line); border-radius: 3px; }
+.frame-stripe { background-image: repeating-linear-gradient(-45deg, #151515 0 9px, white 9px 18px); }
+.field-label { display: grid; gap: 10px; font-size: 13px; font-weight: 650; }
+.field-label select { padding: 12px 10px; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+.sticker-catalog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.sticker-catalog button { display: grid; justify-items: center; gap: 8px; padding: 8px 3px; font-size: 10px; }
+.sticker-catalog img { width: 36px; height: 36px; }
+.sticker-controls { display: grid; gap: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.sticker-overlay { position: absolute; transform: translate(-50%, -50%); border: 2px solid transparent; cursor: grab; touch-action: none; }
+.sticker-overlay.is-selected { border-color: var(--red); box-shadow: 0 0 0 1px white; }
+.sticker-handle { position: absolute; bottom: -7px; right: -7px; width: 14px; height: 14px; background: var(--red); border: 2px solid white; border-radius: 50%; cursor: nwse-resize; }
+.editor-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 0; }
+.download-area { display: flex; align-items: center; justify-content: flex-end; gap: 16px; flex-wrap: wrap; font-size: 12px; }
+.download-area p { margin: 0; }
+@media (max-width: 900px) { .editor-workspace { grid-template-columns: 1fr; } .editor-tools { border-left: 0; border-top: 1px solid var(--line); } .tool-panel { padding: 24px; } .layout-options { max-width: 360px; } .photo-tray { grid-template-columns: repeat(8, minmax(0, 1fr)); } .sticker-catalog { grid-template-columns: repeat(4, minmax(0, 1fr)); } .editor-footer { position: sticky; bottom: 0; z-index: 4; background: var(--cream); border-top: 1px solid var(--line); } }
+@media (max-width: 560px) { .composition-stage { padding: 20px 16px; } .preview-caption { font-size: 8px; letter-spacing: .6px; } .photo-tray { grid-template-columns: repeat(4, minmax(0, 1fr)); } .editor-footer { gap: 12px; flex-wrap: wrap; } .editor-footer button { font-size: 12px; } .download-area { flex: 1; } .tool-panel { padding: 20px; } }

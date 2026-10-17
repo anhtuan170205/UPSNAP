@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { addSessionSticker, createPhotoSession, replaceSessionPhoto, updateSessionSticker } from "../../types/photoSession";
 import { getLayoutDefinition, type LayoutId } from "../editor/layoutDefinitions";
-import { getCenterCoverCrop, getCompositionFilename, renderComposition } from "./compositionService";
+import { downloadPng, getCenterCoverCrop, getCompositionFilename, renderComposition } from "./compositionService";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -84,6 +84,17 @@ describe("getCenterCoverCrop", () => {
 });
 
 describe("composition export", () => {
+  it("cleans up the download URL even when the browser rejects the download", () => {
+    const revokeObjectURL = vi.fn();
+    const schedule = vi.fn();
+    vi.stubGlobal("URL", { createObjectURL: () => "blob:download", revokeObjectURL });
+    vi.stubGlobal("window", { setTimeout: schedule });
+    vi.stubGlobal("document", { createElement: () => ({ click: () => { throw new Error("blocked"); } }) });
+    expect(() => downloadPng(new Blob(["png"]), "print.png")).toThrow("blocked");
+    expect(schedule).toHaveBeenCalledWith(expect.any(Function), 0);
+    schedule.mock.calls[0][0]();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:download");
+  });
   it("uses a filename that identifies the selected layout", () => {
     expect(getCompositionFilename(createPhotoSession())).toBe("upsnap-grid-2x2.png");
   });
