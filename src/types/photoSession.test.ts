@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getLayoutDefinition } from "../features/editor/layoutDefinitions";
-import { createPhotoSession, isSessionComplete, placeLayoutPhoto, reorderLayoutPhotos, replaceSessionPhoto, selectSessionLayout, selectSessionPreset, selectSessionTemplate } from "./photoSession";
+import { MAX_STICKERS, addSessionSticker, createPhotoSession, isSessionComplete, placeLayoutPhoto, removeSessionSticker, reorderLayoutPhotos, replaceSessionPhoto, selectSessionLayout, selectSessionPreset, selectSessionTemplate, updateSessionSticker } from "./photoSession";
 
 describe("photo sessions", () => {
   it("creates an eight-photo session with default selections for every layout", () => {
@@ -11,9 +11,31 @@ describe("photo sessions", () => {
     expect(session.selectedLayoutId).toBe("grid-2x2");
     expect(session.selectedPresetId).toBe("normal");
     expect(session.selectedTemplateId).toBe("white");
+    expect(session.stickers).toEqual([]);
     expect(session.layoutPhotoSelections["grid-2x2"]).toEqual([0, 1, 2, 3]);
     expect(session.layoutPhotoSelections["strip-1x4"]).toEqual([0, 1, 2, 3]);
     expect(session.layoutPhotoSelections["grid-2x3"]).toEqual([0, 1, 2, 3, 4, 5]);
+  });
+
+  it("adds, bounds, and removes stickers without changing photos or styles", () => {
+    const original = createPhotoSession();
+    const added = addSessionSticker(original, "heart");
+    const moved = updateSessionSticker(added, "sticker-1", { x: 4, y: -2, width: 3 });
+    const sticker = moved.stickers[0];
+
+    expect(sticker).toMatchObject({ id: "sticker-1", stickerId: "heart" });
+    expect(sticker.x).toBeLessThan(1);
+    expect(sticker.y).toBeGreaterThan(0);
+    expect(sticker.width).toBeLessThanOrEqual(0.6);
+    expect(moved.photos).toBe(original.photos);
+    expect(removeSessionSticker(moved, "sticker-1").stickers).toEqual([]);
+  });
+
+  it("does not add more than the sticker limit", () => {
+    let session = createPhotoSession();
+    for (let index = 0; index < MAX_STICKERS + 2; index += 1) session = addSessionSticker(session, "star");
+
+    expect(session.stickers).toHaveLength(MAX_STICKERS);
   });
 
   it("only completes after eight accepted photos", () => {

@@ -1,8 +1,10 @@
-import { useEffect, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { LAYOUT_DEFINITIONS, getLayoutDefinition, type LayoutId } from "./layoutDefinitions";
 import { PRESET_DEFINITIONS, TEMPLATE_DEFINITIONS, type PresetId, type TemplateId } from "./styleDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
 import { renderComposition } from "../export/compositionService";
+import { STICKER_DEFINITIONS, getStickerDefinition, type StickerId } from "./stickerDefinitions";
+import { MAX_STICKERS, type StickerPlacement } from "../../types/photoSession";
 import "./EditorPlaceholder.css";
 
 interface EditorPlaceholderProps {
@@ -11,12 +13,15 @@ interface EditorPlaceholderProps {
   onLayoutChange: (layoutId: LayoutId) => void;
   onPresetChange: (presetId: PresetId) => void;
   onTemplateChange: (templateId: TemplateId) => void;
+  onAddSticker: (stickerId: StickerId) => void;
+  onUpdateSticker: (instanceId: string, update: Partial<Pick<StickerPlacement, "x" | "y" | "width">>) => void;
+  onRemoveSticker: (instanceId: string) => void;
   onPlaceLayoutPhoto: (layoutSlotIndex: number, sourceSlotIndex: number) => void;
   onReorderLayoutPhotos: (fromLayoutSlotIndex: number, toLayoutSlotIndex: number) => void;
   onPreviewFinal: () => void;
 }
 
-export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPresetChange, onTemplateChange, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
+export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onPresetChange, onTemplateChange, onAddSticker, onUpdateSticker, onRemoveSticker, onPlaceLayoutPhoto, onReorderLayoutPhotos, onPreviewFinal }: EditorPlaceholderProps) {
   const layout = getLayoutDefinition(session.selectedLayoutId);
   const selection = session.layoutPhotoSelections[layout.id];
   const [draggedLayoutSlotIndex, setDraggedLayoutSlotIndex] = useState<number | null>(null);
@@ -24,6 +29,8 @@ export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onP
   const [dropTargetLayoutSlotIndex, setDropTargetLayoutSlotIndex] = useState<number | null>(null);
   const [renderedPreviewUrl, setRenderedPreviewUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
+  const interaction = useRef<{ instanceId: string; mode: "move" | "resize"; startX: number; startY: number; sticker: StickerPlacement } | null>(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -84,6 +91,50 @@ export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onP
     clearDragState();
   }
 
+  function beginStickerInteraction(event: PointerEvent<HTMLElement>, sticker: StickerPlacement, mode: "move" | "resize") {
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setSelectedStickerId(sticker.id);
+    interaction.current = { instanceId: sticker.id, mode, startX: event.clientX, startY: event.clientY, sticker };
+  }
+
+  function handleStickerPointerMove(event: PointerEvent<HTMLDivElement>) {
+    const current = interaction.current;
+    if (!current) return;
+    const preview = event.currentTarget.parentElement;
+    if (!preview) return;
+    const bounds = preview.getBoundingClientRect();
+    if (current.mode === "move") {
+      onUpdateSticker(current.instanceId, {
+        x: current.sticker.x + (event.clientX - current.startX) / bounds.width,
+        y: current.sticker.y + (event.clientY - current.startY) / bounds.height,
+      });
+    } else {
+      onUpdateSticker(current.instanceId, { width: current.sticker.width + (event.clientX - current.startX) / bounds.width });
+    }
+  }
+
+  function endStickerInteraction() { interaction.current = null; }
+
+  function removeSticker(instanceId: string) {
+    onRemoveSticker(instanceId);
+    if (selectedStickerId === instanceId) setSelectedStickerId(null);
+  }
+
+  function handleStickerKeyDown(event: KeyboardEvent<HTMLDivElement>, sticker: StickerPlacement) {
+    const nudge = event.shiftKey ? 0.05 : 0.02;
+    if (event.key === "ArrowLeft") onUpdateSticker(sticker.id, { x: sticker.x - nudge });
+    else if (event.key === "ArrowRight") onUpdateSticker(sticker.id, { x: sticker.x + nudge });
+    else if (event.key === "ArrowUp") onUpdateSticker(sticker.id, { y: sticker.y - nudge });
+    else if (event.key === "ArrowDown") onUpdateSticker(sticker.id, { y: sticker.y + nudge });
+    else if (event.key === "Delete" || event.key === "Backspace") { removeSticker(sticker.id); return; }
+    else return;
+    event.preventDefault();
+  }
+
+  const selectedSticker = session.stickers.find((sticker) => sticker.id === selectedStickerId) ?? null;
+
   return <section className="editor-placeholder" aria-labelledby="editor-heading">
     <p className="stage-label">Compose your photos</p>
     <h2 id="editor-heading">Choose a layout</h2>
@@ -111,11 +162,29 @@ export function EditorPlaceholder({ session, onBackToReview, onLayoutChange, onP
       </div>
     </section>
 
+    <section className="sticker-selector" aria-labelledby="sticker-heading">
+      <h3 id="sticker-heading">Stickers</h3>
+      <p>Add up to {MAX_STICKERS} stickers, then drag a selected sticker anywhere on your composition.</p>
+      <div className="sticker-selector__options" aria-label="Sticker catalog">
+        {STICKER_DEFINITIONS.map((sticker) => <button key={sticker.id} type="button" onClick={() => onAddSticker(sticker.id)} disabled={session.stickers.length >= MAX_STICKERS}><img src={sticker.src} alt="" /><span>Add {sticker.label}</span></button>)}
+      </div>
+      {session.stickers.length >= MAX_STICKERS && <p className="sticker-selector__limit" role="status">Sticker limit reached. Remove a sticker to add another.</p>}
+      {selectedSticker && <div className="sticker-controls" aria-label={`Controls for ${getStickerDefinition(selectedSticker.stickerId).label} sticker`}>
+        <span>Selected: {getStickerDefinition(selectedSticker.stickerId).label}</span>
+        <button type="button" onClick={() => onUpdateSticker(selectedSticker.id, { width: selectedSticker.width - 0.03 })}>Smaller</button>
+        <button type="button" onClick={() => onUpdateSticker(selectedSticker.id, { width: selectedSticker.width + 0.03 })}>Larger</button>
+        <button type="button" onClick={() => removeSticker(selectedSticker.id)}>Remove</button>
+      </div>}
+    </section>
+
     <section className="rendered-composition" aria-labelledby="rendered-composition-heading">
       <h3 id="rendered-composition-heading">Styled composition</h3>
       <p>This is the same rendering used for your final PNG.</p>
       {previewError && <p className="rendered-composition__error" role="alert">{previewError}</p>}
-      {renderedPreviewUrl ? <img src={renderedPreviewUrl} alt={`Styled ${layout.label} composition`} /> : !previewError && <p role="status">Updating composition preview...</p>}
+      {renderedPreviewUrl ? <div className="rendered-composition__canvas" style={{ aspectRatio: `${layout.canvasWidth} / ${layout.canvasHeight}` }}><img src={renderedPreviewUrl} alt={`Styled ${layout.label} composition`} />{session.stickers.map((sticker) => {
+        const definition = getStickerDefinition(sticker.stickerId);
+        return <div key={sticker.id} className={sticker.id === selectedStickerId ? "sticker-overlay sticker-overlay--selected" : "sticker-overlay"} style={{ left: `${sticker.x * 100}%`, top: `${sticker.y * 100}%`, width: `${sticker.width * 100}%`, aspectRatio: String(definition.aspectRatio) }} role="button" tabIndex={0} aria-label={`${definition.label} sticker. Drag to move; arrow keys to nudge; Delete to remove.`} onPointerDown={(event) => beginStickerInteraction(event, sticker, "move")} onPointerMove={handleStickerPointerMove} onPointerUp={endStickerInteraction} onPointerCancel={endStickerInteraction} onKeyDown={(event) => handleStickerKeyDown(event, sticker)}><span className="sticker-overlay__handle" aria-label={`Resize ${definition.label} sticker`} onPointerDown={(event) => beginStickerInteraction(event, sticker, "resize")} onPointerMove={handleStickerPointerMove} onPointerUp={endStickerInteraction} onPointerCancel={endStickerInteraction} /></div>;
+      })}</div> : !previewError && <p role="status">Updating composition preview...</p>}
     </section>
 
     <p className="drag-instructions">Drag a photo in the preview onto another position to reorder it.</p>

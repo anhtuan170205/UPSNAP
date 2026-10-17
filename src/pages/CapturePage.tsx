@@ -8,7 +8,7 @@ import { CapturedPhotoPreview } from "../features/capture/CapturedPhotoPreview";
 import { capturePhoto } from "../features/capture/captureService";
 import { SessionReview } from "../features/session/SessionReview";
 import { useCamera } from "../hooks/useCamera";
-import { createPhotoSession, getNextEmptySlot, isSessionComplete, placeLayoutPhoto, reorderLayoutPhotos, replaceSessionPhoto, selectSessionLayout, selectSessionPreset, selectSessionTemplate, type PhotoSession } from "../types/photoSession";
+import { addSessionSticker, createPhotoSession, getNextEmptySlot, isSessionComplete, placeLayoutPhoto, removeSessionSticker, reorderLayoutPhotos, replaceSessionPhoto, selectSessionLayout, selectSessionPreset, selectSessionTemplate, updateSessionSticker, type PhotoSession } from "../types/photoSession";
 import type { LayoutId } from "../features/editor/layoutDefinitions";
 
 const COUNTDOWN_SECONDS = 3;
@@ -128,7 +128,7 @@ export function CapturePage() {
   }
 
   if (stage === "editor") {
-    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPresetChange={(presetId) => setSession((current) => selectSessionPreset(current, presetId))} onTemplateChange={(templateId) => setSession((current) => selectSessionTemplate(current, templateId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} onPreviewFinal={() => setStage("final-preview")} /></main>;
+    return <main className="capture-page"><h1>UPSNAP</h1><EditorPlaceholder session={session} onBackToReview={() => setStage("review")} onLayoutChange={(layoutId: LayoutId) => setSession((current) => selectSessionLayout(current, layoutId))} onPresetChange={(presetId) => setSession((current) => selectSessionPreset(current, presetId))} onTemplateChange={(templateId) => setSession((current) => selectSessionTemplate(current, templateId))} onAddSticker={(stickerId) => setSession((current) => addSessionSticker(current, stickerId))} onUpdateSticker={(instanceId, update) => setSession((current) => updateSessionSticker(current, instanceId, update))} onRemoveSticker={(instanceId) => setSession((current) => removeSessionSticker(current, instanceId))} onPlaceLayoutPhoto={(layoutSlotIndex, sourceSlotIndex) => setSession((current) => placeLayoutPhoto(current, layoutSlotIndex, sourceSlotIndex))} onReorderLayoutPhotos={(fromLayoutSlotIndex, toLayoutSlotIndex) => setSession((current) => reorderLayoutPhotos(current, fromLayoutSlotIndex, toLayoutSlotIndex))} onPreviewFinal={() => setStage("final-preview")} /></main>;
   }
 
   if (stage === "final-preview") {

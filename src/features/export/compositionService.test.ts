@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createPhotoSession, replaceSessionPhoto } from "../../types/photoSession";
+import { addSessionSticker, createPhotoSession, replaceSessionPhoto, updateSessionSticker } from "../../types/photoSession";
 import { getLayoutDefinition, type LayoutId } from "../editor/layoutDefinitions";
 import { getCenterCoverCrop, getCompositionFilename, renderComposition } from "./compositionService";
 
@@ -9,6 +9,7 @@ afterEach(() => {
 
 function installCanvasMock() {
   const strokeRect = vi.fn();
+  const drawImage = vi.fn();
   const getImageData = vi.fn(() => ({ data: new Uint8ClampedArray(600 * 600 * 4) }) as ImageData);
   const putImageData = vi.fn();
   const context = {
@@ -18,7 +19,7 @@ function installCanvasMock() {
     restore: vi.fn(),
     translate: vi.fn(),
     rotate: vi.fn(),
-    drawImage: vi.fn(),
+    drawImage,
     strokeStyle: "",
     lineWidth: 0,
     strokeRect,
@@ -47,7 +48,7 @@ function installCanvasMock() {
 
   vi.stubGlobal("document", { createElement: vi.fn(() => canvas) });
   vi.stubGlobal("Image", FakeImage);
-  return { canvas, context, getImageData, putImageData, strokeRect };
+  return { canvas, context, drawImage, getImageData, putImageData, strokeRect };
 }
 
 function createCompleteSession(layoutId: LayoutId) {
@@ -149,5 +150,17 @@ describe("composition export", () => {
     expect(context.rotate).toHaveBeenCalledWith(-Math.PI / 4);
     expect(context.restore).toHaveBeenCalledOnce();
     expect(context.strokeStyle).toBe("#ffffff");
+  });
+
+  it("draws session stickers after photo borders using normalized placement", async () => {
+    const { drawImage, strokeRect } = installCanvasMock();
+    let session = addSessionSticker(createCompleteSession("grid-2x2"), "heart");
+    session = updateSessionSticker(session, "sticker-1", { x: 0.5, y: 0.5, width: 0.2 });
+
+    await renderComposition(session);
+
+    expect(drawImage).toHaveBeenCalledTimes(5);
+    expect(drawImage).toHaveBeenLastCalledWith(expect.anything(), 528, 528, 264, 264);
+    expect(strokeRect.mock.invocationCallOrder[3]).toBeLessThan(drawImage.mock.invocationCallOrder[4]);
   });
 });

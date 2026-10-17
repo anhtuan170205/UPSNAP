@@ -1,5 +1,10 @@
 import { LAYOUT_DEFINITIONS, getLayoutDefinition, type LayoutId } from "../features/editor/layoutDefinitions";
 import type { PresetId, TemplateId } from "../features/editor/styleDefinitions";
+import { getStickerDefinition, type StickerId } from "../features/editor/stickerDefinitions";
+
+export const MAX_STICKERS = 12;
+const DEFAULT_STICKER_WIDTH = 0.18;
+const MIN_STICKER_WIDTH = 0.06;
 
 export interface CapturedPhoto {
   slotIndex: number;
@@ -9,6 +14,14 @@ export interface CapturedPhoto {
 
 export type LayoutPhotoSelections = Record<LayoutId, number[]>;
 
+export interface StickerPlacement {
+  id: string;
+  stickerId: StickerId;
+  x: number;
+  y: number;
+  width: number;
+}
+
 export interface PhotoSession {
   requiredPhotoCount: number;
   photos: Array<CapturedPhoto | null>;
@@ -16,6 +29,7 @@ export interface PhotoSession {
   layoutPhotoSelections: LayoutPhotoSelections;
   selectedPresetId: PresetId;
   selectedTemplateId: TemplateId;
+  stickers: StickerPlacement[];
 }
 
 export const REQUIRED_PHOTO_COUNT = 8;
@@ -37,6 +51,7 @@ export function createPhotoSession(): PhotoSession {
     layoutPhotoSelections: createDefaultLayoutPhotoSelections(),
     selectedPresetId: "normal",
     selectedTemplateId: "white",
+    stickers: [],
   };
 }
 
@@ -68,6 +83,60 @@ export function selectSessionPreset(session: PhotoSession, presetId: PresetId): 
 
 export function selectSessionTemplate(session: PhotoSession, templateId: TemplateId): PhotoSession {
   return { ...session, selectedTemplateId: templateId };
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(Math.max(value, minimum), maximum);
+}
+
+function getClampedStickerPlacement(
+  session: PhotoSession,
+  stickerId: StickerId,
+  placement: Pick<StickerPlacement, "x" | "y" | "width">,
+): Pick<StickerPlacement, "x" | "y" | "width"> {
+  const sticker = getStickerDefinition(stickerId);
+  const layout = getLayoutDefinition(session.selectedLayoutId);
+  const maxWidthForHeight = sticker.aspectRatio * (layout.canvasHeight / layout.canvasWidth) * 0.92;
+  const width = clamp(placement.width, MIN_STICKER_WIDTH, Math.min(0.6, maxWidthForHeight));
+  const halfHeight = (width / sticker.aspectRatio) * (layout.canvasWidth / layout.canvasHeight) / 2;
+  return {
+    width,
+    x: clamp(placement.x, width / 2, 1 - width / 2),
+    y: clamp(placement.y, halfHeight, 1 - halfHeight),
+  };
+}
+
+function getNextStickerInstanceId(stickers: readonly StickerPlacement[]): string {
+  let index = stickers.length + 1;
+  while (stickers.some((sticker) => sticker.id === `sticker-${index}`)) index += 1;
+  return `sticker-${index}`;
+}
+
+export function addSessionSticker(session: PhotoSession, stickerId: StickerId): PhotoSession {
+  if (session.stickers.length >= MAX_STICKERS) return session;
+  const offset = (session.stickers.length % 4) * 0.045;
+  const placement = getClampedStickerPlacement(session, stickerId, {
+    x: 0.5 + offset,
+    y: 0.5 + offset,
+    width: DEFAULT_STICKER_WIDTH,
+  });
+  return { ...session, stickers: [...session.stickers, { id: getNextStickerInstanceId(session.stickers), stickerId, ...placement }] };
+}
+
+export function updateSessionSticker(
+  session: PhotoSession,
+  instanceId: string,
+  update: Partial<Pick<StickerPlacement, "x" | "y" | "width">>,
+): PhotoSession {
+  const existing = session.stickers.find((sticker) => sticker.id === instanceId);
+  if (!existing) return session;
+  const placement = getClampedStickerPlacement(session, existing.stickerId, { ...existing, ...update });
+  return { ...session, stickers: session.stickers.map((sticker) => sticker.id === instanceId ? { ...sticker, ...placement } : sticker) };
+}
+
+export function removeSessionSticker(session: PhotoSession, instanceId: string): PhotoSession {
+  const stickers = session.stickers.filter((sticker) => sticker.id !== instanceId);
+  return stickers.length === session.stickers.length ? session : { ...session, stickers };
 }
 
 export function placeLayoutPhoto(

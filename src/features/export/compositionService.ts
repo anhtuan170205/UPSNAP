@@ -1,6 +1,7 @@
 import { getLayoutDefinition } from "../editor/layoutDefinitions";
 import { applyPresetToImageData } from "../editor/presetProcessing";
 import { getPresetDefinition, getTemplateDefinition, type TemplateDefinition } from "../editor/styleDefinitions";
+import { getStickerDefinition } from "../editor/stickerDefinitions";
 import type { PhotoSession } from "../../types/photoSession";
 
 interface SourceDimensions {
@@ -105,6 +106,10 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
     return photo;
   });
   const images = await Promise.all(selectedPhotos.map((photo) => loadImage(photo.dataUrl)));
+  const stickerImages = await Promise.all(session.stickers.map(async (sticker) => ({
+    sticker,
+    image: await loadImage(getStickerDefinition(sticker.stickerId).src),
+  })));
   const canvas = document.createElement("canvas");
   canvas.width = layout.canvasWidth;
   canvas.height = layout.canvasHeight;
@@ -147,6 +152,13 @@ export async function renderComposition(session: PhotoSession): Promise<Blob> {
       context.strokeRect(slot.x + inset, slot.y + inset, slot.width - template.borderWidth, slot.height - template.borderWidth);
     });
   }
+
+  stickerImages.forEach(({ sticker, image }) => {
+    const definition = getStickerDefinition(sticker.stickerId);
+    const width = sticker.width * canvas.width;
+    const height = width / definition.aspectRatio;
+    context.drawImage(image, sticker.x * canvas.width - width / 2, sticker.y * canvas.height - height / 2, width, height);
+  });
 
   return canvasToPng(canvas);
 }
