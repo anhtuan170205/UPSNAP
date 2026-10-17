@@ -14,6 +14,11 @@ export function capturePhoto(video: HTMLVideoElement): string {
     throw new Error("Could not create canvas context.");
   }
 
+  // Match the mirrored live preview so the accepted image and final export
+  // retain the orientation the person used while framing the shot.
+  context.save();
+  context.translate(canvas.width, 0);
+  context.scale(-1, 1);
   context.drawImage(
     video,
     0,
@@ -21,6 +26,7 @@ export function capturePhoto(video: HTMLVideoElement): string {
     canvas.width,
     canvas.height
   );
+  context.restore();
 
   return canvas.toDataURL("image/png");
 }
